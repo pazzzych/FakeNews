@@ -4,7 +4,7 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 import csv
 
-def get_html(url):
+def scrape_html(url):
     """
     Attempts to get the content at `url` by making an HTTP GET request.
     If the content-type of response is some kind of HTML/XML, return the
@@ -34,26 +34,40 @@ def log_error(e):
     print(e)
 
 
-def get_links():
+def scrape_links():
     url = 'https://www.obozrevatel.com/ukr/'
-    # https://newsone.ua/news.html
-    response = get_html(url)
+    response = scrape_html(url)
+    links = []
 
     if response is not None:
-        links = []
         html = BeautifulSoup(response, 'html.parser')
         for article in html.findAll("article"):
             for a in article.findAll('a'):
                 links.append(a['href'])
-        return links
 
-    #raise Exception('Error retrieving contents at {}'.format(url))
+    return list(set(links))
 
-def save_links(links):
-    with open('links.csv', 'w') as file:
+def clean_links(links):
+    for link in links:
+        if link.endswith('/'):
+            links.remove(link)
+
+    forbidden = ['/show/', '/person/', '/astro/', '/society/', '/kiyany/', '/moyashkola/']
+
+    for link in links:
+        for forb in forbidden:
+            i = 0
+            while i < len(links):
+                if forb in link:
+                    links.remove(links) 
+
+    return links
+
+def links_to_csv(links):
+    with open('links.csv', 'a') as file:
         writer = csv.writer(file, delimiter='\n')
         writer.writerow(links)
 
 if __name__ == '__main__':
-    links = get_links()
-    save_links(links)
+    links = clean_links(scrape_links())
+    links_to_csv(links)

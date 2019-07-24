@@ -4,6 +4,14 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 import csv
 
+def get_links():
+    links = []
+    with open('links.csv', 'r') as f:
+        csv_reader = csv.reader(f, delimiter='\n')
+        for row in csv_reader:
+            links.append(row[0])
+    return links
+
 def scrape_html(url):
     """
     Attempts to get the content at `url` by making an HTTP GET request.
@@ -33,41 +41,18 @@ def log_error(e):
     """
     print(e)
 
-
-def scrape_links():
-    url = 'https://www.obozrevatel.com/ukr/'
+def scrape_data(url):
     response = scrape_html(url)
-    links = []
+
+    title = ''
+    text = ''
 
     if response is not None:
         html = BeautifulSoup(response, 'html.parser')
-        for article in html.findAll("article"):
-            for a in article.findAll('a'):
-                links.append(a['href'])
-
-    return list(set(links))
-
-def clean_links(links):
-    for link in links:
-        if link.endswith('/'):
-            links.remove(link)
-
-    #forbidden = ['/show/', '/person/', '/astro/', '/society/', '/kiyany/', '/moyashkola/']
-
-    #for link in links:
-    #    for forb in forbidden:
-    #        i = 0
-    #        while i < len(links):
-    #            if forb in link:
-    #                links.remove(links) 
-
-    return links
-
-def links_to_csv(links):
-    with open('links.csv', 'a') as file:
-        writer = csv.writer(file, delimiter='\n')
-        writer.writerow(links)
-
-if __name__ == '__main__':
-    links = clean_links(scrape_links())
-    links_to_csv(links)
+        for h1 in html.findAll("h1"):
+            title = h1.text.replace('\n', '')
+        for parag in html.findAll("p"):
+            text += parag.text
+        
+    
+    return [title, text]

@@ -1,43 +1,11 @@
-import requests 
-from requests.exceptions import RequestException
-from contextlib import closing
 from bs4 import BeautifulSoup
+from scrape import scrape_html
 import csv
 
-def scrape_html(url):
-    """
-    Attempts to get the content at `url` by making an HTTP GET request.
-    If the content-type of response is some kind of HTML/XML, return the
-    text content, otherwise return None.
-    """
-    try:
-        with closing(requests.get(url, stream=True)) as resp:
-            if is_good_response(resp):
-                return resp.content
-            else: return None
-    except RequestException as e:
-        log_error('Error during requsts to {} : {}'.format(url, e))
-
-def is_good_response(resp):
-    """
-    Returns True if the response seems to be HTML, False otherwise.
-    """
-    content_type = resp.headers['Content-Type'].lower()
-    return (resp.status_code == 200
-            and content_type is not None
-            and content_type.find('html') > 1)
-
-def log_error(e):
-    """
-    Prints out the error
-    """
-    print(e)
-
-
-def scrape_links():
+def scrape_links_Obozrevatel():
     url = 'https://www.obozrevatel.com/ukr/'
-    response = scrape_html(url)
     links = []
+    response = scrape_html(url)
 
     if response is not None:
         html = BeautifulSoup(response, 'html.parser')
@@ -45,29 +13,110 @@ def scrape_links():
             for a in article.findAll('a'):
                 links.append(a['href'])
 
-    return list(set(links))
-
-def clean_links(links):
     for link in links:
         if link.endswith('/'):
             links.remove(link)
 
-    #forbidden = ['/show/', '/person/', '/astro/', '/society/', '/kiyany/', '/moyashkola/']
+    return list(set(links))
 
-    #for link in links:
-    #    for forb in forbidden:
-    #        i = 0
-    #        while i < len(links):
-    #            if forb in link:
-    #                links.remove(links) 
+def scrape_links_Unian():
+    url = 'https://www.unian.ua/detail/main_news'
+    links = []
+    response = scrape_html(url)
 
-    return links
+    if response is not None:
+        html = BeautifulSoup(response, 'html.parser')
+        for div in html.findAll('div', {'class':'gallery-item news-inline-item'}):
+            for a in div.findAll('a'):
+                links.append(a['href'])
+
+    return list(set(links))
+
+def scrape_links_Pravda():
+    url = 'https://www.pravda.com.ua/news/'
+    links = []
+    response = scrape_html(url)
+
+    if response is not None:
+        html = BeautifulSoup(response, 'html.parser')
+        for div in html.findAll('div', {'class':'article'}):
+            for a in div.findAll('a'):
+                if not a['href'].startswith('https'):
+                    links.append('https://www.pravda.com.ua'+a['href'])
+
+    return list(set(links))
+
+def scrape_links_NewsOne():
+    url = 'https://newsone.ua/news.html'
+    links = []
+    response = scrape_html(url)
+
+    if response is not None:
+        html = BeautifulSoup(response, 'html.parser')
+        for h2 in html.findAll('h2'):
+            for a in h2.findAll('a'):
+                links.append('https://www.newsone.ua'+a['href'])
+
+    return list(set(links))
+
+def scrape_links_Glavcom():
+    url = 'https://glavcom.ua/news.html'
+    links = []
+    response = scrape_html(url)
+
+    if response is not None:
+        html = BeautifulSoup(response, 'html.parser')
+        for ul in html.findAll('ul', {'class':'list'}):
+            for a in ul.findAll('a'):
+                links.append('https://glavcom.ua'+a['href'])
+
+    return list(set(links))
+
+def scrape_links_rbc():
+    url = 'https://www.rbc.ua/rus/news'
+    links = []
+    response = scrape_html(url)
+
+    if response is not None:
+        html = BeautifulSoup(response, 'html.parser')
+        for div in html.findAll('div', {'class':'content-section'}):
+            for a in div.findAll('a'):
+                links.append(a['href'])
+
+    return list(set(links))
+
+def scrape_links_Gordon():
+    url = 'https://gordonua.com/ukr/news.html'
+    links = []
+    response = scrape_html(url)
+
+    if response is not None:
+        html = BeautifulSoup(response, 'html.parser')
+        for div in html.findAll('div', {'class':'lenta_head'}):
+            for a in div.findAll('a'):
+                links.append('https://gordonua.com'+a['href'])
+
+    return list(set(links))
+
 
 def links_to_csv(links):
-    with open('links.csv', 'a') as file:
+    with open('links.csv', 'a', newline='') as file:
         writer = csv.writer(file, delimiter='\n')
         writer.writerow(links)
+    
 
 if __name__ == '__main__':
-    links = clean_links(scrape_links())
+    links = scrape_links_Glavcom()
+    links_to_csv(links)
+    links = scrape_links_Gordon()
+    links_to_csv(links)
+    links = scrape_links_NewsOne()
+    links_to_csv(links)
+    links = scrape_links_Obozrevatel()
+    links_to_csv(links)
+    links = scrape_links_Pravda()
+    links_to_csv(links)
+    links = scrape_links_rbc()
+    links_to_csv(links)
+    links = scrape_links_Unian()
     links_to_csv(links)

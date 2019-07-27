@@ -9,7 +9,8 @@ def get_links():
     with open('links.csv', 'r') as f:
         csv_reader = csv.reader(f, delimiter='\n')
         for row in csv_reader:
-            links.append(row[0])
+            link = ''.join(map(str, row))
+            links.append(link)
     return links
 
 def scrape_html(url):

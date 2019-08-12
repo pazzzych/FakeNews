@@ -3,8 +3,19 @@ from pymongo import MongoClient
 import numpy as np 
 import matplotlib.pyplot as plt 
 from sklearn.feature_extraction.text import TfidfVectorizer
-from stop_words import get_stop_words
+import csv
 
+def get_stop_words():
+    words = []
+    with open('words.csv', 'r') as f:
+        csv_reader = csv.reader(f, delimiter='\n')
+        for row in csv_reader:
+            word = ''.join(map(str, row))
+            words.append(word)
+    return words
+
+stop_words = get_stop_words()
+    
 def get_docs():
     documents = []
     
@@ -18,11 +29,6 @@ def get_docs():
     return documents
 
 def vectorise(docs):
-    stop_words = get_stop_words('russian') + get_stop_words('ukrainian')
-    ext_stop_words = ['the', 'com', 'ссылкой', 'подписывайся', 'читайте новости', 'telegram', 'посилання', 'pravda', 'obozrevatel', 'відео', 'лінк', 'лінка', 'рбк', 'із', 'всі', 'прямого', 'публікація', 'уп', 'ул', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-    for word in ext_stop_words:
-        stop_words.append(word)
-
     vectoriser = TfidfVectorizer(stop_words=stop_words, max_features=10000, max_df = 0.5, use_idf = True, ngram_range=(1,3))
     X = vectoriser.fit_transform(docs)
     print('SHAPE OF X:', X.shape)

@@ -29,7 +29,7 @@ def get_docs():
     return documents
 
 def vectorise(docs):
-    vectoriser = TfidfVectorizer(stop_words=stop_words, max_features=10000, max_df = 0.5, use_idf = True, ngram_range=(1,3))
+    vectoriser = TfidfVectorizer(stop_words=stop_words, max_featсв ures=10000, max_df = 0.5, use_idf = True, ngram_range=(1,3))
     X = vectoriser.fit_transform(docs)
     print('SHAPE OF X:', X.shape)
     terms = vectoriser.get_feature_names()
